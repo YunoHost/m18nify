@@ -2,9 +2,11 @@
 
 import os
 import sys
+import json
 from redbaron import RedBaron
 
 def m18nify_file(file_path):
+    en_json = json.load(open("../../locales/en.json", "r"))
     content = open(file_path).read()
     red = RedBaron(content)
 
@@ -34,9 +36,14 @@ def m18nify_file(file_path):
             print
             break
 
+        en_json[result] = string.to_python()
+
         string.replace("m18n.n('%s')" % result)
 
     open(file_path, "w").write(red.dumps())
+    en_json = json.dumps(en_json, indent=4, sort_keys=True)
+    en_json = "\n".join(map(lambda x: x.rstrip(), en_json.split("\n")))
+    open("../../locales/en.json", "w").write(en_json)
 
 
 
