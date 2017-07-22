@@ -38,7 +38,13 @@ def m18nify_file(file_path):
 
         en_json[result] = string.to_python()
 
-        string.replace("m18n.n('%s')" % result)
+        if string.next and string.next.next.dumps() == "format":
+            # get string.format() call value
+            format_values = string.next.next.next.dumps()[1:-1]
+            del string.parent[-2:]  # remove .format() call
+            string.replace("m18n.n('%s', %s)" % (result, format_values))
+        else:
+            string.replace("m18n.n('%s')" % result)
 
     open(file_path, "w").write(red.dumps())
     en_json = json.dumps(en_json, indent=4, sort_keys=True)
