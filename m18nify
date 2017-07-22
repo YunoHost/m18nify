@@ -5,10 +5,39 @@ import sys
 from redbaron import RedBaron
 
 def m18nify_file(file_path):
-    red = RedBaron(open(file_path).read())
+    content = open(file_path).read()
+    red = RedBaron(content)
 
-    for string in red("string"):
-        print string
+    content = content.split("\n")
+
+    for string in red("string", lambda x: getattr(x.parent, "type", None) in ("call_argument", "atomtrailers")):
+        line = string.absolute_bounding_box.top_left.line
+
+        print
+        print
+
+        to_display = content[line - 2:line + 1]
+        print "Enter a key to make the string %s translatable" % repr(string)
+        print "[%s]" % (line - 1), "   " + to_display[0]
+        print "[%s]" % line, "-->" + to_display[1]
+        print "[%s]" % (line + 1), "   " + to_display[2]
+        print
+        try:
+            result = raw_input("Key (or nothing to skip or 'q' to quit): ")
+            if not result.strip():
+                continue
+        except EOFError:
+            print
+            continue
+
+        if result.strip().lower() == "q":
+            print
+            break
+
+        string.replace("m18n.n('%s')" % result)
+
+    open(file_path, "w").write(red.dumps())
+
 
 
 if __name__ == '__main__':
@@ -21,4 +50,8 @@ if __name__ == '__main__':
 
 
     for f in files:
-        m18nify_file(f)
+        try:
+            m18nify_file(f)
+            os.system("git diff")
+        except KeyboardInterrupt:
+            print
